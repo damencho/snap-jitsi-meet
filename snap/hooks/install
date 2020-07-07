@@ -1,0 +1,29 @@
+#!/bin/sh
+
+set -x
+set -e
+
+LOG=${SNAP_COMMON}/config.log
+
+echo "install hook `date`" >> ${LOG}
+
+JITSI_MEET_CONFIG="${SNAP}/etc/jitsi/meet/${JVB_HOSTNAME}-config.js"
+#JITSI_MEET_NGINX_CONFIG="${SNAP}/etc/nginx/sites-enabled/${JVB_HOSTNAME}.conf"
+
+#if [ ! -f ${JITSI_MEET_NGINX_CONFIG} ] ; then
+#    echo "New nginx config " >> ${LOG}
+#
+#    mkdir -p $(dirname ${JITSI_MEET_NGINX_CONFIG})
+#    cp ${SNAP}/usr/share/jitsi-meet-web-config/jitsi-meet.example ${JITSI_MEET_NGINX_CONFIG}
+#    sed -i "s/jitsi-meet.example.com/$JVB_HOSTNAME/g" ${JITSI_MEET_NGINX_CONFIG}
+#fi
+
+if [ ! -f ${JITSI_MEET_CONFIG} ] ; then
+    echo "New config.js install "  >> ${LOG}
+
+    mkdir -p $(dirname ${JITSI_MEET_CONFIG})
+    cp ${SNAP}/usr/share/jitsi-meet-web-config/config.js ${JITSI_MEET_CONFIG}
+    # replaces needed config for multidomain as it works only with nginx
+    sed -i "s/conference.jitsi-meet.example.com/conference.<\!--# echo var=\"subdomain\" default=\"\" -->jitsi-meet.example.com/g" ${JITSI_MEET_CONFIG}
+    sed -i "s/jitsi-meet.example.com/${JVB_HOSTNAME}/g" ${JITSI_MEET_CONFIG}
+fi

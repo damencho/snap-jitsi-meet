@@ -1,0 +1,10 @@
+#!/bin/sh
+
+LOG=${SNAP_COMMON}/config.log
+
+echo "configure hook `date`" >> ${LOG}
+env > "$SNAP_DATA"/hooks-env
+#command=$(snapctl get command)
+#if [ "$command" = "dump-env" ]; then
+#    env > "$SNAP_DATA"/hooks-env
+#fi

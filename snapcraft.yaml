@@ -1,0 +1,103 @@
+name: jitsi-meet
+version: "2.0"
+summary: Jitsi Meet
+description: |
+  This is a snap of Jitsi Meet
+
+grade: stable
+confinement: strict
+base: core18
+
+# might need certificate configuration
+
+parts:
+  jicofo:
+    plugin: dump
+    source: https://download.jitsi.org/stable/jicofo_1.0-589-1_all.deb
+    stage-packages:
+      - openjdk-11-jre-headless
+      - ca-certificates-java
+      - java-common
+  jitsi-meet-prosody:
+    plugin: dump
+    source: https://download.jitsi.org/stable/jitsi-meet-prosody_1.0.4127-1_all.deb
+    stage-packages:
+      - prosody
+      - lua-bitop
+      - lua-event
+      - lua-expat
+      - lua-filesystem
+      - lua-sec
+      - lua-socket
+      - lua5.2
+  jitsi-meet-web:
+    plugin: dump
+    source: https://download.jitsi.org/stable/jitsi-meet-web_1.0.4127-1_all.deb
+  jitsi-videobridge:
+    plugin: dump
+    source: https://download.jitsi.org/stable/jitsi-videobridge2_2.1-202-g5f9377b9-1_all.deb
+    stage-packages:
+      - openjdk-11-jre-headless
+      - ca-certificates-java
+      - java-common
+  jitsi-meet-web-config:
+    plugin: dump
+    source: https://download.jitsi.org/stable/jitsi-meet-web-config_1.0.4127-1_all.deb
+    override-pull: |
+      snapcraftctl pull
+      echo "meet.jitsi" > etc/hostname
+      echo "127.0.0.1 localhost meet.jitsi" > etc/hosts
+      #usr/share/jitsi-meet/scripts/install-letsencrypt-cert.sh
+    stage-packages:
+      - nginx
+  nginx-customizations:
+    plugin: dump
+    source: src/nginx/
+
+  jitsi-scripts:
+    source: ./scripts
+    plugin: dump
+
+layout:
+  /etc/jitsi:
+    bind: $SNAP/etc/jitsi
+
+environment:
+  JVB_HOSTNAME: meet.jitsi
+  JVB_LOGFILE: $HOME/jitsi/jvb.log
+  JICOFO_LOGFILE: $HOME/jitsi/jicofo.log
+  JICOFO_AUTH_DOMAIN: auth.meet.jitsi
+
+
+apps:
+  nginx:
+    command: nginx
+    daemon: simple
+    restart-condition: on-abnormal
+    plugs:
+      - home
+      - network
+      - network-bind
+
+  jitsi-videobridge:
+    command: jitsi-videobridge.sh
+    daemon: simple
+    restart-condition: on-abnormal
+    plugs:
+      - home
+      - network
+      - network-bind
+    environment:
+      JAVA_HOME: $SNAP/usr/lib/jvm/java-11-openjdk-amd64
+      PATH: $JAVA_HOME/bin:$PATH
+  jicofo:
+    command: jicofo.sh
+    daemon: simple
+    restart-condition: on-abnormal
+    plugs:
+      - home
+      - network
+      - network-bind
+    environment:
+      JAVA_HOME: $SNAP/usr/lib/jvm/java-11-openjdk-amd64
+      PATH: $JAVA_HOME/bin:$PATH
